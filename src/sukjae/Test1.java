@@ -13,7 +13,7 @@ import javax.swing.JTextField;
 
 public class Test1 extends JFrame{
 	private JLabel roomNameL,passwordL,personL;
-	private JTextField roomNameF,passwordF,personF;
+	private JTextField roomNameF,passwordF;
 	private JButton roomCreateB,roomCancleB;
 	private JComboBox<String> personCB;
 	private String roomName;

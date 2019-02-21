@@ -37,18 +37,11 @@ public class RoomDTO implements Serializable{
 			return person;
 		}
 		public void setPerson(int person) {
-			if(person== 0) {
-				person = 2;
-			}else if(person == 1) {
-				person = 3;
-			}else if(person == 2) {
-				person = 4;
-			}
 			this.person = person;
 		}
 		
 		public String toString() {
-			return "["+roomName+"]"+"인원수 : "+person;
+			return "["+roomName+"]"+" 인원수 : "+person;
 		}
 		
 }

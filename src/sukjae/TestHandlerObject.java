@@ -87,39 +87,32 @@ public class TestHandlerObject extends Thread {
 						sendDTO.setCommand(Info.SEND);
 						sendDTO.setMessage("["+nickName+"] "+testDTO.getMessage());
 						
-									
 						broadcast(sendDTO);
 						broadcast(userDTO);
 						broadcast(roomDTO);
 						}
 					
-					
-			
-				
-					
-				
 					if(userDTO.getCommand()== Info.JOIN) {
 						userName = userDTO.getName();
 						UserDTO S_userDTO = new UserDTO();
 						S_userDTO.setName(userName);
 						S_userDTO.setCommand(Info.JOIN);
 						
-						
 						broadcast(S_userDTO);
 						broadcast(roomDTO);
 					}
-				
+					System.out.println("[1]roomDTO.getRoomName()"+roomDTO.getRoomName());
 					
-				
-				
-				
-				
 					if(roomDTO.getCommand() == Info.CREATE) {
+						System.out.println("roomDTO.getRoomName()"+roomDTO.getRoomName());
+						System.out.println("roomDTO.getRoomPass() "+roomDTO.getRoomPass());
+						System.out.println("roomDTO.getPerson()"+roomDTO.getPerson());
 						roomName = roomDTO.getRoomName();
 						roomPass = roomDTO.getRoomPass();
 						roomPerson = roomDTO.getPerson();
 						
 						RoomDTO S_roomDTO = new RoomDTO();
+						S_roomDTO.setCommand(Info.CREATE);
 						S_roomDTO.setRoomName(roomName);
 						S_roomDTO.setRoomPass(roomPass);
 						S_roomDTO.setPerson(roomPerson);

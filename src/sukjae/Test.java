@@ -43,6 +43,12 @@ public class Test extends JFrame implements ActionListener,Runnable{
 	private ObjectInputStream ois;
 	private int sw;
 	
+	private JLabel roomNameL,passwordL,personL;
+	private JTextField roomNameF,passwordF;
+	private JButton roomCreateB,roomCancleB;
+	private JComboBox<String> personCB;
+
+	
 	
 	public Test() {
 		setLayout(null);
@@ -158,6 +164,7 @@ public class Test extends JFrame implements ActionListener,Runnable{
 	}
 	
 	private void event() {
+		
 		roomB.addActionListener(this);
 		chattingB.addActionListener(this);
 		chattingF.addActionListener(this);
@@ -176,36 +183,86 @@ public class Test extends JFrame implements ActionListener,Runnable{
 	
 	//----------------방만들기 메소드 ---------------------
 	private void roomCreate() {
-		Test1 test1 = new Test1();
+		
 		TestDTO testDTO = new TestDTO();
 		UserDTO userDTO = new UserDTO();
 		RoomDTO roomDTO = new RoomDTO();
 		
-		test1.roomC(roomDTO);
-		roomDTO.setRoomName(test1.getRoomName());
-		roomDTO.setRoomPass(test1.getPassWord());
-		roomDTO.setPerson(test1.getPersonNumber());
+		sw = 0;
+	
+		JFrame roomFrame = new JFrame();
+		roomFrame.setLayout(null);
+		String[] number= {"2","3","4"};
 		
-		System.out.println("roomDTO.getRoomName : "+roomDTO.getRoomName());
-		System.out.println("roomDTO get Person : "+roomDTO.getPerson());
-		System.out.println("roomDTO  : "+roomDTO);
-		roomDTO.setCommand(Info.CREATE);
+		roomNameL = new JLabel("방 제목");
+		roomNameF = new JTextField(30);
 		
+		passwordL = new JLabel("비밀번호");
+		passwordF = new JTextField(10);
 		
-		if(test1.getRoomkey() == 1) {
-			try {
-				System.out.println("roomDTO.getRoomName : "+roomDTO.getRoomName());
-				System.out.println("roomDTO get Person : "+roomDTO.getPerson());
-				oos.writeObject(testDTO);
-				oos.writeObject(userDTO);
-				oos.writeObject(roomDTO);
-				oos.flush();
-				
-			} catch (IOException e) {
-				e.printStackTrace();
+		personL = new JLabel("게임인원");
+		personCB = new JComboBox<String>(number);
+		personCB.setSelectedItem(0);
+		
+		roomCreateB = new JButton(" 만들기 ");
+		roomCancleB = new JButton(" 취  소 ");
+		
+		roomNameL.setBounds(50,30,70,30);
+		roomNameF.setBounds(110,30,150,30);
+		passwordL.setBounds(50,90,70,30);
+		passwordF.setBounds(110,90,70,30);
+		personL.setBounds(50,150,70,30);
+		personCB.setBounds(110,150,50,30);
+		roomCreateB.setBounds(30,210 , 100, 40);
+		roomCancleB.setBounds(140,210 , 100, 40);
+		
+		roomFrame.add(roomNameL); roomFrame.add(roomNameF);
+		roomFrame.add(passwordL); roomFrame.add(passwordF);
+		roomFrame.add(personL);   roomFrame.add(personCB);
+		roomFrame.add(roomCreateB);roomFrame.add(roomCancleB);
+		
+		roomFrame.setTitle("방만들기");
+		roomFrame.setBounds(750,300,300,300);
+		roomFrame.setVisible(true);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		this.addWindowListener(new WindowAdapter(){
+			@Override
+			public void	windowClosing(WindowEvent e){
+				roomFrame.dispose();
 			}
-		}
-		
+		});
+		roomCreateB.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				roomDTO.setRoomName(roomNameF.getText());
+				roomDTO.setRoomPass(passwordF.getText());
+				roomDTO.setPerson(personCB.getSelectedIndex());
+				roomDTO.setCommand(Info.CREATE);
+				
+				System.out.println("roomDTO : "+roomDTO);
+				System.out.println("roomDTO.NAME : "+roomDTO.getRoomName());
+				
+				if(roomNameF.getText()!=null) {
+					try {
+						oos.writeObject(testDTO);
+						oos.writeObject(userDTO);
+						oos.writeObject(roomDTO);
+						oos.flush();
+						
+					} catch (IOException ie) {
+						ie.printStackTrace();
+					}
+					roomFrame.dispose();
+				}
+			}
+		});
+		roomCancleB.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				roomFrame.dispose();
+			}
+		});
+
 	}
 	
 	
@@ -281,9 +338,17 @@ public class Test extends JFrame implements ActionListener,Runnable{
 				if(userDTO.getCommand() == Info.SEND) {
 				
 				}
-			
+				
+				
 				if(roomDTO.getCommand() == Info.CREATE) {
-						roomModel.addElement(roomDTO);
+					if(roomDTO.getPerson()== 0) {
+						roomDTO.setPerson(2);
+					}else if(roomDTO.getPerson() == 1) {
+						roomDTO.setPerson(3);
+					}else if(roomDTO.getPerson() == 2) {
+						roomDTO.setPerson(4);
+					}
+					roomModel.addElement(roomDTO);
 				}
 				
 				
