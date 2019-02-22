@@ -1,8 +1,10 @@
-package sukjae;
+package miniproject.catchmind;
+
+import miniproject.catchmind.Info;
 
 import java.io.Serializable;
 
-public class RoomDTO implements Serializable{
+public class waitingRoomRCreateDTO implements Serializable{
 		private String roomName;
 		private String roomPass;
 		private int person;//0 ->2Έν  // 1->3Έν //2->4Έν 

@@ -1,4 +1,5 @@
-package sukjae;
+package miniproject.catchmind;
+
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,7 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
-public class myInfo extends JFrame {
+public class waitingRoomMyInfo extends JFrame {
 	JLabel idL,nickNameL, pointL;
 	JTextField idF,nickNameF,pointF;
 	JButton cancleB, myIB;

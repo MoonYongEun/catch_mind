@@ -1,8 +1,10 @@
-package sukjae;
+package miniproject.catchmind;
 
 import java.io.Serializable;
 
-public class UserDTO implements Serializable{
+import miniproject.catchmind.Info;
+
+public class waitingRoomUserDTO implements Serializable{
 	private String name;
 	private Info command;
 	
@@ -24,5 +26,6 @@ public class UserDTO implements Serializable{
 	public String toString() {
 		return name;
 	}
+
 	
 }

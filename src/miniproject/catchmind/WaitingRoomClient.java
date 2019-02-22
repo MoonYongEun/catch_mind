@@ -1,4 +1,4 @@
-package sukjae;
+package miniproject.catchmind;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
@@ -29,19 +30,22 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 
+import miniproject.membership.dto.MembershipDTO;
 
-public class Test extends JFrame implements ActionListener,Runnable{
+
+public class WaitingRoomClient extends JFrame implements ActionListener,Runnable{
 	private JLabel roomListL,userL,chattingL, idL, pointL;
 	private JButton roomB,chattingB , myB, myIB;
 	private static JTextArea chattingA;
 	private JTextField chattingF, idF, pointF;
-	DefaultListModel<RoomDTO> roomModel;
-	private DefaultListModel<UserDTO> userModel;
+	DefaultListModel<WaitingRoomChattingDTO> roomModel;
+	private DefaultListModel<waitingRoomUserDTO> userModel;
 	private String message;
 	private Socket socket;
 	private ObjectOutputStream oos;
 	private ObjectInputStream ois;
-	private int sw;
+	private static ArrayList<waitingRoomUserDTO> arUserList;
+	private ArrayList<waitingRoomRCreateDTO> arRoomList;
 	
 	private JLabel roomNameL,passwordL,personL;
 	private JTextField roomNameF,passwordF;
@@ -50,20 +54,24 @@ public class Test extends JFrame implements ActionListener,Runnable{
 
 	
 	
-	public Test() {
+	public WaitingRoomClient() {
+		arUserList = new ArrayList<waitingRoomUserDTO>();
+		//arRoomList = new ArrayList<waitingRoomRCreateDTO>();
+		
+		
 		setLayout(null);
 
 		//방 목록
 		roomListL = new JLabel("방 목록");
-		roomModel = new DefaultListModel<RoomDTO>();
-		JList<RoomDTO> roomList = new JList<RoomDTO>(roomModel);
-		//roomModel.addElement("TestRoom");
+		roomModel = new DefaultListModel<WaitingRoomChattingDTO>();
+		JList<WaitingRoomChattingDTO> roomList = new JList<WaitingRoomChattingDTO>(roomModel);
+		
 		roomB = new JButton("방 만들기");
 
 		//사용자 목록
 		userL = new JLabel("사용자 목록 ");
-		userModel = new DefaultListModel<UserDTO>();
-		JList<UserDTO> userListL = new JList<UserDTO>(userModel);
+		userModel = new DefaultListModel<waitingRoomUserDTO>();
+		JList<waitingRoomUserDTO> userListL = new JList<waitingRoomUserDTO>(userModel);
 	
 		//JScrollPane scrollU = new JScrollPane(userListL);
 		//scrollU.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -142,17 +150,17 @@ public class Test extends JFrame implements ActionListener,Runnable{
 			public void windowClosing(WindowEvent e) {
 				if(oos == null || ois == null )System.exit(0);
 				try{
-					TestDTO testDTO = new TestDTO();
-					UserDTO userDTO = new UserDTO();
-					RoomDTO roomDTO = new RoomDTO();
+					WaitingRoomChattingDTO waitingroomchattingDTO = new WaitingRoomChattingDTO();
+					waitingRoomUserDTO waitingroomuserDTO = new waitingRoomUserDTO();
+					//waitingRoomRCreateDTO waitingroomrcreateDTO = new waitingRoomRCreateDTO();
 					
-					testDTO.setCommand(Info.EXIT);
-					userDTO.setCommand(Info.EXIT);
-					roomDTO.setCommand(Info.EXIT);
+					waitingroomchattingDTO.setCommand_A(Info.EXIT);
+					waitingroomuserDTO.setCommand(Info.EXIT);
+					//waitingroomrcreateDTO.setCommand(Info.EXIT);
 					
-					oos.writeObject(testDTO);
-					oos.writeObject(userDTO);
-					oos.writeObject(roomDTO);
+					oos.writeObject(waitingroomchattingDTO);
+					oos.writeObject(waitingroomuserDTO);
+					//oos.writeObject(waitingroomrcreateDTO);
 					oos.flush();
 					
 				}catch(IOException io){
@@ -163,7 +171,7 @@ public class Test extends JFrame implements ActionListener,Runnable{
 		});
 	}
 	
-	private void event() {
+	public void event() {
 		
 		roomB.addActionListener(this);
 		chattingB.addActionListener(this);
@@ -184,11 +192,11 @@ public class Test extends JFrame implements ActionListener,Runnable{
 	//----------------방만들기 메소드 ---------------------
 	private void roomCreate() {
 		
-		TestDTO testDTO = new TestDTO();
-		UserDTO userDTO = new UserDTO();
-		RoomDTO roomDTO = new RoomDTO();
+		WaitingRoomChattingDTO waitingroomchattingDTO = new WaitingRoomChattingDTO();
+		waitingRoomUserDTO waitingroomuserDTO = new waitingRoomUserDTO();
+		waitingRoomRCreateDTO waitingroomrcreateDTO = new waitingRoomRCreateDTO();
 		
-		sw = 0;
+		
 	
 		JFrame roomFrame = new JFrame();
 		roomFrame.setLayout(null);
@@ -234,19 +242,17 @@ public class Test extends JFrame implements ActionListener,Runnable{
 		roomCreateB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				roomDTO.setRoomName(roomNameF.getText());
-				roomDTO.setRoomPass(passwordF.getText());
-				roomDTO.setPerson(personCB.getSelectedIndex());
-				roomDTO.setCommand(Info.CREATE);
+				waitingroomrcreateDTO.setRoomName(roomNameF.getText());
+				waitingroomrcreateDTO.setRoomPass(passwordF.getText());
+				waitingroomrcreateDTO.setPerson(personCB.getSelectedIndex());
+				waitingroomrcreateDTO.setCommand(Info.CREATE);
 				
-				System.out.println("roomDTO : "+roomDTO);
-				System.out.println("roomDTO.NAME : "+roomDTO.getRoomName());
-				
+		
 				if(roomNameF.getText()!=null) {
 					try {
-						oos.writeObject(testDTO);
-						oos.writeObject(userDTO);
-						oos.writeObject(roomDTO);
+						oos.writeObject(waitingroomchattingDTO);
+						oos.writeObject(waitingroomuserDTO);
+						oos.writeObject(waitingroomrcreateDTO);
 						oos.flush();
 						
 					} catch (IOException ie) {
@@ -269,30 +275,30 @@ public class Test extends JFrame implements ActionListener,Runnable{
 
 	//-----------------------------------------------
 	//대기자 리스트
-		
+		//wait for 문돌게 jLIST2개 
 	
 	//------------------채팅 메소드 ------------------------------
 	private void roomChatting() {				// 채팅 메세지 전송 
 		
 		String message = chattingF.getText();
 		
-		TestDTO testDTO = new TestDTO();
-		UserDTO userDTO = new UserDTO();
-		RoomDTO roomDTO = new RoomDTO();
+		WaitingRoomChattingDTO waitingroomchattingDTO = new WaitingRoomChattingDTO();
+		waitingRoomUserDTO waitingroomuserDTO = new waitingRoomUserDTO();
+		//waitingRoomRCreateDTO waitingroomrcreateDTO = new waitingRoomRCreateDTO();
 		
 		if(message.toLowerCase().equals("exit")) {
-			testDTO.setCommand(Info.EXIT);
-			userDTO.setCommand(Info.EXIT);
+			waitingroomchattingDTO.setCommand_A(Info.EXIT);
+			
 		}else {
-			testDTO.setCommand(Info.SEND);
-			testDTO.setMessage(message);
-			userDTO.setCommand(Info.SEND);
+			waitingroomchattingDTO.setCommand_A(Info.SEND);
+			waitingroomchattingDTO.setMessage(message);
+			waitingroomuserDTO.setCommand(Info.WAIT);
 		}
 		
 		try {
-			oos.writeObject(testDTO);
-			oos.writeObject(userDTO);
-			oos.writeObject(roomDTO);
+			oos.writeObject(waitingroomchattingDTO);
+			oos.writeObject(waitingroomuserDTO);
+			//oos.writeObject(waitingroomrcreateDTO);
 			oos.flush();
 			
 		}catch (IOException e) {
@@ -302,54 +308,70 @@ public class Test extends JFrame implements ActionListener,Runnable{
 		 
 	}
 
-	
+
 	@Override
 	public void run() {	//서버로 부터 받는쪽
-		TestDTO testDTO = null;
-		UserDTO userDTO = null;
-		RoomDTO roomDTO = null;
+		
+		WaitingRoomChattingDTO waitingroomchattingDTO = null;
+		waitingRoomUserDTO waitingroomuserDTO = null;
+		//waitingRoomRCreateDTO waitingroomrcreateDTO = null;
 		
 		while(true) {
 			try {
-				testDTO = (TestDTO)ois.readObject();
-				userDTO = (UserDTO)ois.readObject();
-				roomDTO = (RoomDTO)ois.readObject();
-			
+				waitingroomchattingDTO = (WaitingRoomChattingDTO)ois.readObject();
+				waitingroomuserDTO = (waitingRoomUserDTO)ois.readObject();
+				//waitingroomrcreateDTO = (waitingRoomRCreateDTO)ois.readObject();
 				
+		
+				if(waitingroomchattingDTO.getCommand_E()==Info.EXIT){
 					
-				if(testDTO.getCommand()==Info.EXIT && userDTO.getCommand()==Info.EXIT && roomDTO.getCommand()==Info.EXIT) {
 					oos.close();
 					ois.close();
 					socket.close();
-					System.exit(0);
-				
-				}else if(testDTO.getCommand() == Info.SEND) {
-					chattingA.append(testDTO.getMessage()+"\n");
 					
+					//for() // 사용자목록 에서 제거할떄 쓸려고 냅둔거 
+					//waitingroomchattingDTO.getNickName();
+					//userModel.remove(index);
+					System.exit(0);
+
+					
+				}else if(waitingroomchattingDTO.getCommand_A() == Info.SEND) {
+					chattingA.append(waitingroomchattingDTO.getMessage()+"\n");
 					int pos = chattingA.getText().length();// 스크롤바가 내려갈때 따라가게끔 해주는역활
 					chattingA.setCaretPosition(pos);
+				}
 
-				}
-						
-				if(userDTO.getCommand() == Info.JOIN) {
-					userModel.addElement(userDTO);
-				}
-			
-				if(userDTO.getCommand() == Info.SEND) {
+
+				
+				if(waitingroomuserDTO.getCommand() == Info.JOIN) {
+					
+					userModel.addElement(waitingroomuserDTO);
+					
+				}else if (waitingroomuserDTO.getCommand() == Info.WAIT) {
 				
 				}
 				
 				
-				if(roomDTO.getCommand() == Info.CREATE) {
-					if(roomDTO.getPerson()== 0) {
-						roomDTO.setPerson(2);
-					}else if(roomDTO.getPerson() == 1) {
-						roomDTO.setPerson(3);
-					}else if(roomDTO.getPerson() == 2) {
-						roomDTO.setPerson(4);
+				
+		/*
+				
+				if(WaitingRoomChattingDTO.getCommand_C() == Info.CREATE) {
+					if(waitingroomrcreateDTO.getPerson()== 0) {
+						waitingroomrcreateDTO.setPerson(2);
+					}else if(waitingroomrcreateDTO.getPerson() == 1) {
+						waitingroomrcreateDTO.setPerson(3);
+					}else if(waitingroomrcreateDTO.getPerson() == 2) {
+						waitingroomrcreateDTO.setPerson(4);
 					}
-					roomModel.addElement(roomDTO);
+					
+					roomModel.addElement(waitingroomrcreateDTO);
+					//arRoomList.add(waitingroomrcreateDTO);
+					//for(waitingRoomRCreateDTO dto : arRoomList) {
+					//	roomModel.addElement(dto);
+					//}
+					
 				}
+		*/
 				
 				
 				
@@ -362,36 +384,41 @@ public class Test extends JFrame implements ActionListener,Runnable{
 		
 	}
 	
-	public void service() {
-		String nickName = "사과";
+	public void service( ) {
+		
+		//String nickName = idnamescoreDTO.getId();
+		
+		String nickName = JOptionPane.showInputDialog("아이디를 입력하세요");
 		String serverIP = JOptionPane.showInputDialog("서버IP를 입력하세요","192.168.");
-																		//어디서 부터 받아 오기   : 아직 미입력
+		//String serverIP ="192.168.0.5";
+																		
 		if(serverIP==null || serverIP.length()==0){
 			System.out.println("서버 IP가 입력되지 않았습니다");
 			System.exit(0);
 		}
 		
 		try {
-			socket = new Socket(serverIP, 9000);			//서버 입력 : 아직 미입력 
+			socket = new Socket(serverIP, 9500);			//서버 입력 : 아직 미입력 
 			oos = new ObjectOutputStream(socket.getOutputStream());
 			ois = new ObjectInputStream(socket.getInputStream());
 			
 			//채팅 DTO
-			TestDTO testDTO = new TestDTO();
-			testDTO.setCommand(Info.JOIN);
-			testDTO.setNickName(nickName);	// 로그인시 닉네임 받아오기 : 아직 미입력
+			WaitingRoomChattingDTO waitingroomchattingDTO = new WaitingRoomChattingDTO();
+			waitingroomchattingDTO.setCommand_A(Info.JOIN);
+			waitingroomchattingDTO.setNickName(nickName);	// 로그인시 닉네임 받아오기 : 아직 미입력
 			
 			//대기실 DTO
-			UserDTO userDTO = new UserDTO();
-			userDTO.setCommand(Info.JOIN);
-			userDTO.setName(nickName);
+			waitingRoomUserDTO waitingroomuserDTO = new waitingRoomUserDTO();
+			waitingroomuserDTO.setCommand(Info.JOIN);
+			waitingroomuserDTO.setName(nickName);
 			
 			//방만들기 DTO
-			RoomDTO roomDTO = new RoomDTO();
+			//waitingRoomRCreateDTO waitingroomrcreateDTO = new waitingRoomRCreateDTO();
 			
-			oos.writeObject(testDTO);
-			oos.writeObject(userDTO);
-			oos.writeObject(roomDTO);
+			oos.writeObject(waitingroomchattingDTO);
+			oos.writeObject(waitingroomuserDTO);
+			//oos.writeObject(waitingroomrcreateDTO);
+			//oos.writeObject(idnamescoreDTO);
 			oos.flush();
 			
 		} catch (IOException e) {
@@ -403,16 +430,13 @@ public class Test extends JFrame implements ActionListener,Runnable{
 	}
 	//------------------ 내정보 ----------------------------------
 	private void myInfo() {
-		myInfo myinfo = new myInfo();
-		myinfo.myinfoC();
+		waitingRoomMyInfo waitingroommyinfo = new waitingRoomMyInfo();
+		waitingroommyinfo.myinfoC();
 	}
-	
-	//---------------메  인---------------------------------------
-
-	public static void main(String[] args) {
-		Test test = new Test();
-		test.event();
-		test.service();
-	
+	public static void main(String []args) {
+		WaitingRoomClient waitingroomclient = new WaitingRoomClient();
+		waitingroomclient.event();
+		waitingroomclient.service();
 	}
 }
+
