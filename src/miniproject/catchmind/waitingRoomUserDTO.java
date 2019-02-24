@@ -5,7 +5,34 @@ import java.io.Serializable;
 import miniproject.catchmind.Info;
 
 public class waitingRoomUserDTO implements Serializable{
+	private String id;
 	private String name;
+	private int score;
+	private int indexNumber;
+	
+	public int getIndexNumber() {
+		return indexNumber;
+	}
+
+	public void setIndexNumber(int indexNumber) {
+		this.indexNumber = indexNumber;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public int getScore() {
+		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
 	private Info command;
 	
 	public Info getCommand() {

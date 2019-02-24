@@ -135,9 +135,9 @@ public class LogInWindow extends JFrame implements ActionListener{
 				idnamescoreDTO.setScore(userScore);
 				
 				//대기실 창 생성!
-				//WaitingRoomClient waitingroomclient = new WaitingRoomClient();
-				//waitingroomclient.event();
-				//waitingroomclient.service(idnamescoreDTO);
+				WaitingRoomClient waitingroomclient = new WaitingRoomClient();
+				waitingroomclient.event();
+				waitingroomclient.service(idnamescoreDTO);
 			
 				
 				this.setVisible(false);
