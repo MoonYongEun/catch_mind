@@ -3,7 +3,7 @@ package miniproject.catchmind;
 import java.io.Serializable;
 
 enum Info{
-	JOIN , EXIT,SEND , CREATE, WAIT ,DELETE
+	JOIN , EXIT,SEND , CREATE, WAIT ,DELETE ,ANSWER , READY, START
 }
 
 public class WaitingRoomChattingDTO implements Serializable{

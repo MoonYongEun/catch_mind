@@ -19,6 +19,28 @@ class ChatDTO implements Serializable{
 	private String id;
 	private String password;
 	private String email;
+	private int readyCount;//★추가한 내용
+	private int startCount;
+	private int score;
+
+	public int getScore() {
+		return score;
+	}
+	public void setScore(int score) {
+		this.score = score;
+	}
+	public int getReadyCount() {
+		return readyCount;
+	}
+	public void setReadyCount(int readyCount) {
+		this.readyCount = readyCount;
+	}
+	public int getStartCount() {
+		return startCount;
+	}
+	public void setStartCount(int startCount) {
+		this.startCount = startCount;
+	}
 
 	private Info command;
 	

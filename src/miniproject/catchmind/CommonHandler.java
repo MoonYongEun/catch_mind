@@ -80,8 +80,8 @@ public class CommonHandler extends Thread {
 						
 				
 				//유저 불러오기	----------------------------------------------------------------------	
-						if(waitingroomchattingDTO.getCommand()== Info.JOIN && waitingroomuserDTO.getCommand()== Info.JOIN) {
-							if(arUserList.size() > 0) {
+						
+						if(waitingroomchattingDTO.getCommand()== Info.JOIN && arUserList !=null) {
 								
 								for(int i =0; i<arUserList.size();i++) {
 									userName = arUserList.get(i).getName();
@@ -100,10 +100,13 @@ public class CommonHandler extends Thread {
 									
 								}
 								oos.flush();
-							}
+							
 						}
+						
 				//방몽록 불러오기---------------------------------------------------------------
-						if(waitingroomrcreateDTO.getCommand() == Info.JOIN && arRoomList.size() > 0) {
+						
+						
+						if(waitingroomrcreateDTO.getCommand() == Info.JOIN && arRoomList!=null) {
 							
 							for(int i =0; i<arRoomList.size();i++) {
 								roomName = arRoomList.get(i).getRoomName();
@@ -129,12 +132,19 @@ public class CommonHandler extends Thread {
 							oos.flush();
 						}
 						
+						
 						//arGameUserList.add(chatHandlerDTO);	//게임유저 리스트 추가
 				//게임방에서 유저 추가-----------------------------------------------------------------------
-						if(gameuserDTO.getCommand()==Info.JOIN && arGameUserList.size() > 0 ) {
+						System.out.println(arGameUserList.size());
+						
+						if(gameuserDTO.getCommand()==Info.JOIN && arGameUserList != null) {
+							System.out.println(" 들어온수치 : "+arGameUserList.size());
 							for(int i =0; i<arGameUserList.size();i++) {
 								gameUserName = arGameUserList.get(i).getName();
 								point = arGameUserList.get(i).getPoint();
+								arGameUserList.get(i).getOwner();
+								System.out.println("에리이리스트에 저장된 Name 은? : "+gameUserName);
+								
 								WaitingRoomChattingDTO waitingroomchattingDTO_send = new WaitingRoomChattingDTO();
 								waitingRoomUserDTO waitingroomuserDTO_send = new waitingRoomUserDTO();
 								waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
@@ -142,6 +152,10 @@ public class CommonHandler extends Thread {
 								GameUserDTO gameuserDTO_send = new GameUserDTO();
 								gameuserDTO_send.setName(gameUserName);
 								gameuserDTO_send.setPoint(point);
+								gameuserDTO_send.setOwner(arGameUserList.get(i).getOwner());
+								gameuserDTO_send.setCommand(Info.JOIN);
+								
+								System.out.println("gameuserDTO for문 몇번 돌았니?");
 								
 								oos.writeObject(waitingroomchattingDTO_send);
 								oos.writeObject(waitingroomuserDTO_send);
@@ -153,6 +167,7 @@ public class CommonHandler extends Thread {
 							}
 							oos.flush();
 						}
+						
 						
 				//------------------------------------------------------------------------------------------
 						if(waitingroomchattingDTO.getCommand()== Info.JOIN) {
@@ -256,7 +271,7 @@ public class CommonHandler extends Thread {
 							broadcast(waitingroomrcreateDTO_send);
 							
 							
-						}else if(waitingroomrcreateDTO.getCommand() == Info.CREATE) {
+						}else if(waitingroomrcreateDTO.getCommand() == Info.CREATE) {		
 							arRoomList.add(waitingroomrcreateDTO);				//arrayList 추가  방 만들기 카운트 
 			
 							roomName = waitingroomrcreateDTO.getRoomName();
@@ -266,11 +281,6 @@ public class CommonHandler extends Thread {
 							//UserArrayList 에서 삭제
 							//arUserList.remove(indexNumber);
 							
-							waitingRoomUserDTO waitingroomuserDTO_send = new waitingRoomUserDTO();
-							waitingroomuserDTO_send.setId(id);
-							waitingroomuserDTO_send.setName(userName);
-							waitingroomuserDTO_send.setScore(score);
-							waitingroomuserDTO_send.setIndexNumber(indexNumber);
 							
 							waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
 							waitingroomrcreateDTO_send.setCommand(Info.CREATE);
@@ -278,13 +288,9 @@ public class CommonHandler extends Thread {
 							waitingroomrcreateDTO_send.setRoomPass(roomPass);
 							waitingroomrcreateDTO_send.setPerson(roomPerson);
 							
-							broadcast(waitingroomchattingDTO);
-							broadcast(waitingroomuserDTO_send);
 							broadcast(waitingroomrcreateDTO_send);
-							broadcast(chatHandlerDTO);
-							broadcast(shapeDTOList);
-							broadcast(gameuserDTO);
 							
+
 						}else if(waitingroomrcreateDTO.getCommand() == Info.WAIT) {
 							waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
 							waitingroomrcreateDTO_send.setCommand(Info.WAIT);
@@ -294,13 +300,12 @@ public class CommonHandler extends Thread {
 						//-------------------------------------------------------------------
 						
 						if(chatHandlerDTO.getCommand()==Info.JOIN) {
-							
-							chatNickName=chatHandlerDTO.getNickName();
+							chatNickName = gameuserDTO.getName();
+
 							ChatDTO chatSendDTO= new ChatDTO();
 							chatSendDTO.setCommand(Info.SEND);
 							chatSendDTO.setMessage("["+chatNickName+"]님이 입장하였습니다,  "+"매너채팅 하시길 바랍니다");
 							
-
 							broadcast(chatSendDTO);
 							broadcast(shapeDTOList);
 
@@ -351,24 +356,56 @@ public class CommonHandler extends Thread {
 							broadcast(chatSendDTO);
 							broadcast(shapeDTOList);
 							
+						}else if(chatHandlerDTO.getCommand()==Info.READY) {
+			
+							ChatDTO chatDTO_send = new ChatDTO();
+							chatDTO_send.setCommand(Info.READY);
+							chatDTO_send.setReadyCount(chatHandlerDTO.getReadyCount());
+							
+							broadcast(chatDTO_send);
+							broadcast(shapeDTOList);
+							
+						}else if(chatHandlerDTO.getCommand()==Info.START) {
+							ChatDTO chatDTO_send = new ChatDTO();
+							chatDTO_send.setCommand(Info.START);
+							chatDTO_send.setStartCount(chatHandlerDTO.getStartCount());
+							
+							broadcast(chatDTO_send);
+							broadcast(shapeDTOList);
+							
+						}else if(chatHandlerDTO.getCommand()==Info.ANSWER) {
+							ChatDTO chatDTO_send = new ChatDTO();
+							chatDTO_send.setCommand(Info.ANSWER);
+							
+							broadcast(chatDTO_send);
+							broadcast(shapeDTOList);
+							
 						}
 						
 						//-----------------------------------------------------------------------
 						
 						if(gameuserDTO.getCommand()==Info.JOIN) {
-							arGameUserList.add(gameuserDTO);	//게임유저 리스트 추가
 							
-							gameUserName = gameuserDTO.getName();
-							point = gameuserDTO.getPoint();
+							gameUserName = gameuserDTO.getName();			//이름 저장
+							point = gameuserDTO.getPoint();				//점수 저장
+
+							//arGameUserList.add(gameuserDTO);	//게임유저 Array 리스트 추가 어레이리스트에 이름이 들어가기 위해서
 							GameUserDTO gameuserDTO_send = new GameUserDTO();
 							gameuserDTO_send.setName(gameUserName);
+							gameuserDTO_send.setPoint(point);
+
+							if(arGameUserList.size()==0)gameuserDTO_send.setOwner("방장");
+							else gameuserDTO_send.setOwner("유저");
+							
+							arGameUserList.add(gameuserDTO_send);
 							gameuserDTO_send.setCommand(Info.JOIN);
 							
 							broadcast(gameuserDTO_send);
 							
 						}else if(gameuserDTO.getCommand()==Info.WAIT) {
+						
 							GameUserDTO gameuserDTO_send = new GameUserDTO();
-							gameuserDTO_send.setCommand(Info.WAIT);
+
 							broadcast(gameuserDTO_send);
 						}
 						

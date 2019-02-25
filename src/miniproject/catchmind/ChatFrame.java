@@ -23,23 +23,36 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 
+
+
+
 @SuppressWarnings("serial")
 class ChatFrame extends JFrame implements ActionListener,Runnable{
-	private JTextField chatSend; //입력창
+	private JTextField chatSend, answerT; //입력창, 정답창
 	private JTextArea chatPrint; //메세지 출력창
 	private JList<GameUserDTO> playerList; //참가자 목록창
-	private JButton exitB,sendB,readyB,startB;//나가기버튼,전송버튼,준비버튼,시작버튼
+	private JButton exitB,sendB,readyB,startB, answerB;//나가기버튼,전송버튼,준비버튼,시작버튼
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
 	private Socket chatSocket;
 	private DefaultListModel<GameUserDTO> chatModel;
 	private String chatNickName;
+	private int point;
+	private int readyCount=0; //추가한거
+	private int startCount=0; //★추가한 내용
+	private boolean bb=true;//추가한거
+	private static int ii;//추가한거
+	private String[] Quiz = {"고양이", "개", "태양", "달", "컴퓨터"};//★추가한 내용
+	int[] list = new int[5];//★추가한 내용
+	private JProgressBar bar = new JProgressBar(JProgressBar.HORIZONTAL,0,120); //추가한거
+	private int score;
 	
 	private int x1, y1, x2, y2; //좌표
 	private JButton[] btn; //색깔 버튼
@@ -48,19 +61,24 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 	private ArrayList<catchmind_ShapDTO> sendList; //서버로 보내는 list
 	private ArrayList<catchmind_ShapDTO> serverInfoList; //서버에서 받아온 list	
 	private ArrayList<catchmind_ShapDTO> shapeDTOList;
+	private ArrayList<catchmind_ShapDTO> cloneList;
 	
 
 	private int colorNum; //색깔 기준
 	
-	public ChatFrame(waitingRoomRCreateDTO waitingroomrcreateDTO, 
-							waitingRoomUserDTO waitingroomuserDTO ){
+	public ChatFrame(waitingRoomRCreateDTO waitingroomrcreateDTO, waitingRoomUserDTO waitingroomuserDTO_send ) {
+			//ObjectOutputStream oos, ObjectInputStream ois){
 		super("이것은 그림인가 낙서인가 이때까지 이런 게임은 없었다.");
+		//this.chatSocket=chatSoket;
+		//this.oos = oos;
+		//this.ois = ois;
+		
 		//System.out.println("chatFrame"+waitingroomuserDTO.getName());
 		String chatServerIp="localhost";
-		chatNickName = waitingroomuserDTO.getName();
+	
 
-		
 		try {
+			
 			chatSocket =new Socket(chatServerIp,9500);
 			oos = new ObjectOutputStream(chatSocket.getOutputStream());
 			ois = new ObjectInputStream(chatSocket.getInputStream());
@@ -73,11 +91,12 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 			waitingroomrcreateDTO_1.setCommand(Info.WAIT);
 			ChatDTO chatDTO = new ChatDTO();
 			chatDTO.setCommand(Info.JOIN);
-			chatDTO.setNickName(chatNickName);
+			//chatDTO.setCommand(Info.WAIT);
 			GameUserDTO gameuserDTO = new GameUserDTO();
-			gameuserDTO.setName(chatNickName);
-			gameuserDTO.setPoint(waitingroomuserDTO_1.getScore());
+			//gameuserDTO.setCommand(Info.WAIT);
 			gameuserDTO.setCommand(Info.JOIN);
+			gameuserDTO.setName(waitingroomuserDTO_send.getName());
+			gameuserDTO.setPoint(waitingroomuserDTO_send.getScore());
 			
 			oos.writeObject(waitingroomchattingDTO);
 			oos.writeObject(waitingroomuserDTO_1);
@@ -86,6 +105,8 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 			oos.writeObject(sendList);
 			oos.writeObject(gameuserDTO);
 			oos.flush();
+			
+			
 			
 		} catch (UnknownHostException e2) {
 			e2.printStackTrace();
@@ -99,8 +120,9 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 		chatThread.start();
 		
 		setLayout(null);
-
+		
 		chatSend = new JTextField();
+		answerT = new JTextField(); //정답TextField
 		chatPrint= new JTextArea();
 		chatModel = new DefaultListModel<GameUserDTO>();
 		playerList = new JList<GameUserDTO>(chatModel);
@@ -108,20 +130,28 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 		sendB=new JButton("전송");
 		readyB=new JButton("준비");
 		startB=new JButton("시작");
-		
+		answerB=new JButton("정답");
+
 		chatPrint.setEditable(false);
+		startB.setEnabled(false);//여기 나중에 flase로 변경해줘야함
 		
 		JScrollPane scroll = new JScrollPane(chatPrint);
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		this.getContentPane().add("Center",scroll);//
 		
 		chatSend.setBounds(640,585,300,30);
+		answerT.setBounds(50, 580, 470, 30);
 		scroll.setBounds(640,360,400,220);
 		playerList.setBounds(640,50,395,300);
 		exitB.setBounds(1050,50,100,30);
 		sendB.setBounds(960,585,80,30);
 		readyB.setBounds(635,650,200,50);
 		startB.setBounds(850,650,200,50);
+		answerB.setBounds(530, 580, 70, 30);
+		bar.setBounds(1050, 100, 100, 30);
+		
+		add(answerB);
+		add(answerT);
 		
 		btn = new JButton[6];
 		String[] title = {"검정", "빨강", "초록", "파랑", "노랑", "분홍"};
@@ -149,7 +179,8 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 		
 		//캔버스
 		can = new catchmind_Canvas(this);
-		can.setBounds(50, 50, 550, 565);
+		can.setBounds(50, 50, 550, 525);
+		can.setEnabled(false);
 		
 		//리스트
 		sendList = new ArrayList<catchmind_ShapDTO>();
@@ -164,6 +195,8 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 		add(thickB);
 		add(thinB);
 		
+		answerB.addActionListener(this); //★추가한 내용
+		
 		Container containerC =this.getContentPane();
 		containerC.add(chatSend);
 		containerC.add("Center", scroll);
@@ -172,6 +205,9 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 		containerC.add(sendB);
 		containerC.add(readyB);
 		containerC.add(startB);
+		containerC.add(bar);//추가한거
+		bar.setStringPainted(true);//추가한거
+		bar.setString("0초");//추가한거
 		
 		setBounds(700,100, 1200, 800);
 		setVisible(true);
@@ -179,6 +215,18 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 		
 		//버튼 이벤트
 		for(int i=0; i<title.length; i++) btn[i].addActionListener(this);
+		
+		for(int i=0; i<5; i++) {
+			list[i] = (int)(Math.random()*5);
+			for(int j=0; j<i; j++) {
+				if(list[i] == list[j]) {
+					i--;
+					break;
+				}
+			}
+		}
+		 
+		answerB.addActionListener(this); //★추가한 내용
 		
 		
 		this.addWindowListener(new WindowAdapter(){
@@ -263,7 +311,7 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 				if(thinB.isSelected()) 	dto.setShape(Shape.LINE);
 				else if(thickB.isSelected()) dto.setShape(Shape.RECT);
 				sendList.add(dto);
-				ArrayList<catchmind_ShapDTO> cloneList = (ArrayList<catchmind_ShapDTO>) sendList.clone();
+				cloneList = (ArrayList<catchmind_ShapDTO>) sendList.clone();
 				
 				try {
 					WaitingRoomChattingDTO waitingroomchattingDTO = new WaitingRoomChattingDTO();
@@ -316,7 +364,7 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 		GameUserDTO gameuserDTO = new GameUserDTO();
 		
 		if(e.getSource()==chatSend || e.getSource()==sendB) {
-
+			chatDTO.setNickName(chatNickName);
 			chatDTO.setCommand(Info.SEND);
 			chatDTO.setMessage(chatMsg);
 			gameuserDTO.setCommand(Info.WAIT);
@@ -326,7 +374,7 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 				oos.writeObject(waitingroomuserDTO);
 				oos.writeObject(waitingroomrcreateDTO);
 				oos.writeObject(chatDTO);
-				oos.writeObject(sendList);
+				oos.writeObject(cloneList);
 				oos.writeObject(gameuserDTO);
 				oos.flush();
 			} catch (IOException e1) {
@@ -344,7 +392,7 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 				oos.writeObject(waitingroomuserDTO);
 				oos.writeObject(waitingroomrcreateDTO);
 				oos.writeObject(chatDTO);
-				oos.writeObject(sendList);
+				oos.writeObject(cloneList);
 				oos.writeObject(gameuserDTO);
 				oos.flush();
 				
@@ -352,44 +400,122 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 				e1.printStackTrace();
 			}
 		
-		}
-
-		catchmind_ShapDTO dto = new catchmind_ShapDTO();
-		
-		if(e.getSource() == btn[0]) { colorNum = 0;
-		}else if(e.getSource() == btn[1]) { colorNum = 1;
-		}else if(e.getSource() == btn[2]) { colorNum = 2;
-		}else if(e.getSource() == btn[3]) { colorNum = 3;
-		}else if(e.getSource() == btn[4]) {	colorNum = 4;
-		}else if(e.getSource() == btn[5]) {	colorNum = 5;
-		}
-																	//서버로  채팅 보내기
-		/*
-		if(e.getSource()==exitB || e.getSource()==readyB || e.getSource()==startB) {
+		}else if(e.getSource() == answerT || e.getSource() == answerB){//★추가한 내용		
+			
+			waitingroomchattingDTO.setCommand(Info.WAIT);
+			waitingroomuserDTO.setCommand(Info.WAIT);
+			waitingroomrcreateDTO.setCommand(Info.WAIT);
+			chatDTO.setCommand(Info.ANSWER);
+			chatDTO.setMessage(chatMsg);
+			chatDTO.setScore(score);
+			gameuserDTO.setCommand(Info.WAIT);
+			try {
+				oos.writeObject(waitingroomchattingDTO);
+				oos.writeObject(waitingroomuserDTO);
+				oos.writeObject(waitingroomrcreateDTO);
+				oos.writeObject(chatDTO);
+				oos.writeObject(cloneList);
+				oos.writeObject(gameuserDTO);
+				oos.flush();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			answerT.setText("");
+		}else if (e.getSource()==readyB) {//★추가한 내용
+			waitingroomchattingDTO.setCommand(Info.WAIT);
+			waitingroomuserDTO.setCommand(Info.WAIT);
+			waitingroomrcreateDTO.setCommand(Info.WAIT);
+			chatDTO.setCommand(Info.READY);
+			chatDTO.setMessage(chatMsg);
+			chatDTO.setScore(score);
+			gameuserDTO.setCommand(Info.WAIT);
 
 			
-			if(e.getSource()==exitB) {	chatDTO.setCommand(Info.EXIT);
-			}
-			else if(e.getSource()==readyB) {
-			}
-			else if(e.getSource()==startB) {				
-			} 
-			else{
-				
+			if(readyCount==0) {
+				readyCount++;
+				chatDTO.setReadyCount(readyCount);
+				readyB.setEnabled(false);
+			}else {
+				readyCount++;
+				chatDTO.setReadyCount(readyCount);
+				readyB.setEnabled(false);
 			}
 			
 			try {
-				
-				chatClientOos.writeObject(chatDTO);
-				chatClientOos.writeObject(sendList);
-				chatClientOos.flush();
-			
-			} catch (IOException io) {
-				io.printStackTrace();
+				oos.writeObject(waitingroomchattingDTO);
+				oos.writeObject(waitingroomuserDTO);
+				oos.writeObject(waitingroomrcreateDTO);
+				oos.writeObject(chatDTO);
+				oos.writeObject(cloneList);
+				oos.writeObject(gameuserDTO);
+				oos.flush();
+			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
-			*/
 			
+			
+			if(readyCount==4) {//if(readyCount==wrc.getPersonCB()) { 원래는 이거
+				startB.setEnabled(true);
+			}
+		}
 		
+		else if(e.getSource()==startB) {//★추가한 내용
+			bb=true;
+			answerT.setEditable(false);
+			startB.setEnabled(false);
+			
+			waitingroomchattingDTO.setCommand(Info.WAIT);
+			waitingroomuserDTO.setCommand(Info.WAIT);
+			waitingroomrcreateDTO.setCommand(Info.WAIT);
+			chatDTO.setCommand(Info.START);
+			chatDTO.setMessage(chatMsg);
+			chatDTO.setScore(score);
+			gameuserDTO.setCommand(Info.WAIT);
+			
+			
+			if(startCount==0) {
+				startCount++;
+				chatDTO.setStartCount(startCount);
+			}else {
+				startCount++;
+				chatDTO.setStartCount(startCount);
+			}
+			
+			
+			
+			answerT.setText(Quiz[list[startCount-1]]);
+			if(startCount == 5) {
+				startB.setEnabled(false);
+				System.out.println("게임이 종료되었습니다");
+				list = null;
+			}
+			
+			try {
+				oos.writeObject(waitingroomchattingDTO);
+				oos.writeObject(waitingroomuserDTO);
+				oos.writeObject(waitingroomrcreateDTO);
+				oos.writeObject(chatDTO);
+				oos.writeObject(cloneList);
+				oos.writeObject(gameuserDTO);
+				oos.flush();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
+		
+		else {
+
+			catchmind_ShapDTO dto = new catchmind_ShapDTO();
+			
+			if(e.getSource() == btn[0]) { colorNum = 0;
+			}else if(e.getSource() == btn[1]) { colorNum = 1;
+			}else if(e.getSource() == btn[2]) { colorNum = 2;
+			}else if(e.getSource() == btn[3]) { colorNum = 3;
+			}else if(e.getSource() == btn[4]) {	colorNum = 4;
+			}else if(e.getSource() == btn[5]) {	colorNum = 5;
+			}
+		}
+													//서버로  채팅 보내기
 	}//actionPerformed 종료
 	
 	public void chatIp(waitingRoomRCreateDTO waitingroomrcreateDTO,waitingRoomUserDTO waitingroomuserDTO, Socket socket) {
@@ -464,17 +590,82 @@ class ChatFrame extends JFrame implements ActionListener,Runnable{
 					chatPrint.append(chatDTO.getMessage()+"\n");
 					int chatPos = chatPrint.getText().length();
 					chatPrint.setCaretPosition(chatPos);//스크롤바 위치 계속요청
+				}else if(chatDTO.getCommand()==Info.ANSWER) {//★추가한 내용
+					if(answerT.getText().equals(chatDTO.getMessage())) {
+						score += 10;
+						chatPrint.append("["+chatDTO.getNickName()+"] 님 정답입니다.\n");
+					}
+				}else if(chatDTO.getCommand()==Info.READY) {//★추가한 내용
+					
+					readyCount = chatDTO.getReadyCount();
+					System.out.println(readyCount);
+					if(chatDTO.getReadyCount() == 2) {
+						startB.setEnabled(true);
+						readyB.setEnabled(false);
+					}
+					System.out.println(chatDTO.getReadyCount());
+					chatPrint.append(chatDTO.getMessage()+"\n");
+
+					int chatPos = chatPrint.getText().length();
+					chatPrint.setCaretPosition(chatPos);
+					
+				}else if(chatDTO.getCommand()==Info.START) {//★추가한 내용
+					readyB.setEnabled(false);
+					startCount = chatDTO.getStartCount();
+					System.out.println(startCount);
+					if(chatDTO.getStartCount() == 5) {
+						startB.setEnabled(false);
+						readyB.setEnabled(true);
+					}
+
+					for(int i=ii;i<=119;i++) {
+						if(!bb) break;
+						try {
+							Thread.sleep(50);//원래는 1000
+							
+						}catch(InterruptedException ee) {}
+						bar.setValue(i);
+						ii=i;
+						bar.setString(i+1+"초");
+					if(ii==119) {
+						ii=0;
+						bar.setString(ii+"초");
+						startB.setEnabled(true);
+					}
+					//
+				}
+				if(startCount == 5) {
+					startB.setEnabled(false);
+					readyB.setEnabled(true);
+				}
+			}
+				
+				if(waitingroomuserDTO.getCommand()==Info.SEND) {
+					chatNickName =waitingroomuserDTO.getName();
+					point = waitingroomuserDTO.getScore();
+				}
+				
+				if(waitingroomrcreateDTO.getCommand()==Info.CREATE) {
+					
 				}
 				
 				
+	
+	
 				if(gameuserDTO.getCommand()==Info.JOIN) {
+					if(gameuserDTO.getOwner().equals("방장")){
+						System.out.println(gameuserDTO.getOwner());
+						//can.setEnabled(true);
+					}
+					
 					chatModel.addElement(gameuserDTO);
 					
 				}else if(gameuserDTO.getCommand()==Info.WAIT) {
-				
 				}
 				
 
+				
+				
 				
 			}catch (IOException io) {
 					io.printStackTrace();

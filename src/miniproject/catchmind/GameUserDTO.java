@@ -5,8 +5,16 @@ import java.io.Serializable;
 public class GameUserDTO implements Serializable {
 	private String name;
 	private int point;
+	private String owner; // 0일시 방장 // 1일시 사용자
 	private Info command;
 	
+	
+	public String getOwner() {
+		return owner;
+	}
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
 	public int getPoint() {
 		return point;
 	}
@@ -27,7 +35,7 @@ public class GameUserDTO implements Serializable {
 	}
 	
 	public String toString() {
-		return "["+name+"]"+"점수 :"+point;
+		return "["+owner+"]"+"["+name+"]"+"점수 :"+point;
 		
 	}
 }
