@@ -21,7 +21,16 @@ class ChatDTO implements Serializable{
 	private String email;
 	private int readyCount;//★추가한 내용
 	private int startCount;
+	private boolean timestop;
 	private int score;
+	
+	
+	public boolean isTimestop() {
+		return timestop;
+	}
+	public void setTimestop(boolean timestop) {
+		this.timestop = timestop;
+	}
 
 	public int getScore() {
 		return score;

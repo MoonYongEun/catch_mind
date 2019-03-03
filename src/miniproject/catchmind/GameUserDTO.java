@@ -35,7 +35,7 @@ public class GameUserDTO implements Serializable {
 	}
 	
 	public String toString() {
-		return "["+owner+"]"+"["+name+"]"+"Á¡¼ö :"+point;
+		return "["+owner+"]"+"["+name+"]";
 		
 	}
 }

@@ -1,9 +1,11 @@
 package miniproject.catchmind;
 
+import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -33,8 +35,7 @@ public class catchmind_Canvas extends Canvas /*implements Runnable*/{
 		bufferG.setColor(getBackground()); //Äµ¹ö½º ¹ÙÅÁ»ö
 		bufferG.fillRect(0, 0, d.width, d.height); //±×»öÀ» Äµ¹ö½º Å©±â¸¸Å­ Ã¤¿ö¶ó(±×Àü²¬ Áö¿ò)
 		
-		
-		if(mp.getServerInfoList().size() > 0) {
+		if(mp.getServerInfoList() != null) {
 			for(catchmind_ShapDTO dto : mp.getServerInfoList()) {
 				int x1 = dto.getX1(); //getter·Î x1°ª °¡Á®¿À±â 
 				int y1 = dto.getY1(); //getter·Î y1°ª °¡Á®¿À±â 
@@ -49,25 +50,14 @@ public class catchmind_Canvas extends Canvas /*implements Runnable*/{
 					case 5 : bufferG.setColor(Color.MAGENTA); break; //ºÐÈ«»ö
 				}
 				if(dto.getShape() == Shape.LINE) {
+					Graphics2D graphics2d = (Graphics2D) bufferG;
+			         graphics2d.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, 0));
 					bufferG.drawLine(x1, y1, x2, y2); //¾ãÀº Ææ
 				}else if(dto.getShape() == Shape.RECT) {
-					bufferG.fillRect(x1, y1, 10, 10); //±½Àº Ææ
+					Graphics2D graphics2d = (Graphics2D) bufferG;
+			         graphics2d.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, 0));
+			        bufferG.drawLine(x1,y1,x2,y2);
 				}
-			}
-		}else {
-			for(catchmind_ShapDTO dto : mp.getServerInfoList()) {//¼­¹ö·ÎºÎÅÍ ¹Þ¾Æ¿Â ¸®½ºÆ®
-				int x1 = dto.getX1(); int y1 = dto.getY1();  int x2 = dto.getX2(); 	int y2 = dto.getY2(); 	
-				
-				switch(dto.getColorNum()) {
-					case 0 : bufferG.setColor(Color.BLACK); break; //°ËÀº»ö
-					case 1 : bufferG.setColor(Color.RED); break; //»¡°­»ö
-					case 2 : bufferG.setColor(Color.GREEN); break; //ÃÊ·Ï»ö
-					case 3 : bufferG.setColor(Color.BLUE); break; //ÆÄ¶û»ö
-					case 4 : bufferG.setColor(Color.YELLOW); break; //³ë¶û»ö
-					case 5 : bufferG.setColor(Color.MAGENTA); break; //ºÐÈ«»ö
-				}
-				if(dto.getShape() == Shape.LINE) bufferG.drawLine(x1, y1, x2, y2); //¾ãÀº Ææ
-				else if(dto.getShape() == Shape.RECT) 	bufferG.fillRect(x1, y1, 10, 10); //±½Àº Ææ
 			}
 		}
 		
@@ -85,9 +75,18 @@ public class catchmind_Canvas extends Canvas /*implements Runnable*/{
 				case 4 : bufferG.setColor(Color.YELLOW); break;
 				case 5 : bufferG.setColor(Color.MAGENTA); break;
 			}
-			if(mp.getThinB().isSelected()) 	bufferG.drawLine(x1, y1, x2, y2);
-			else if(mp.getThickB().isSelected()) bufferG.fillRect(x1, y1, 10, 10);			
+			if(mp.getThinB().isSelected()) {
+				Graphics2D graphics2d = (Graphics2D) bufferG;
+		         graphics2d.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, 0));
+				bufferG.drawLine(x1, y1, x2, y2); //¾ãÀº Ææ
+			}
+			else if(mp.getThickB().isSelected()) {
+				Graphics2D graphics2d = (Graphics2D) bufferG;
+		         graphics2d.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, 0));
+		        bufferG.drawLine(x1,y1,x2,y2);			
+			}
 		}
+		if(mp.getClearB().isSelected()) bufferG.clearRect(0, 0, d.width, d.height);
 		paint(g); 
 	}
 	

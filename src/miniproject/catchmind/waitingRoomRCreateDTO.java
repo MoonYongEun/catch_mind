@@ -7,12 +7,19 @@ import java.io.Serializable;
 public class waitingRoomRCreateDTO implements Serializable{
 		private String roomName;
 		private String roomPass;
+		private String owner;
 		private int person;//0 ->2Έν  // 1->3Έν //2->4Έν 
 		private int roomNumber;
 		private Info command;
 		
 		
 		
+		public String getOwner() {
+			return owner;
+		}
+		public void setOwner(String owner) {
+			this.owner = owner;
+		}
 		public int getRoomNumber() {
 			return roomNumber;
 		}

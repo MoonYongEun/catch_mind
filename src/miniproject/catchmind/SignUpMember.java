@@ -34,18 +34,20 @@ public class SignUpMember extends JFrame implements ActionListener{
 						emailAddressT, certificateT;
 	private JButton duplicationB, certificateB, cancelB, registerB;
 	private JComboBox<String> mailSelect;
-	private boolean duplicateCheck, certificateCheck; //true: 사용가능, false: 사용불가
+	private boolean duplicateCheck = true,//true: 중복존재, false:사용가능
+					certificateCheck; //true: 인증키 일치(사용가능), false: 사용불가
 	private String certificationKey;
 	
 	public SignUpMember() {
 		super("회원가입");
 		
+		mailSelect = new JComboBox<String>();
+		mailSelect.addItem("gmail.com");
 		constructLabel();
 		constructTextField();
 		constructButton();
-		mailSelect = new JComboBox<String>();
-		mailSelect.addItem("gmail.com");
 		event();
+		
 		
 		Container container = this.getContentPane();
 		container.setLayout(null);
@@ -109,15 +111,10 @@ public class SignUpMember extends JFrame implements ActionListener{
 		certificateRowP.add(new JLabel("      인증번호 :"));
 		certificateRowP.add(certificateT);
 		
-		
-		//leftP.setBackground(Color.WHITE);
-		leftP.setBounds(20, 20, 100, 300);		
-		//rightP.setBackground(Color.DARK_GRAY);
-		rightP.setBounds(120, 20, 250, 300);		
-		//buttonRowP.setBackground(Color.cyan);
+		leftP.setBounds(20, 20, 100, 300);	
+		rightP.setBounds(120, 20, 250, 300);
 		buttonRowP.setBounds(20, 330, 350, 50);
 		
-
 		leftP.add(IDP);
 		leftP.add(passwordP);
 		leftP.add(confirmPasswordP);
@@ -211,18 +208,16 @@ public class SignUpMember extends JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand().equals("발송")) mailSend();
-		else if(e.getActionCommand().equals("취소")) return;
-		//이 부분은 합치면서 고쳐야 한다. 종료하면 안된다.
-		
+		else if(e.getActionCommand().equals("취소")) {
+			setVisible(false);
+			dispose();
+		}		
 		else if(e.getActionCommand().equals("중복 확인")) checkID();
-		//DB에서 ID 겹치는지 검색해야 한다. DAO
-		else if(e.getSource()==registerB) memberRegister();
-		
+		else if(e.getSource()==registerB) memberRegister();		
 	}
 	
 	//회원목록의 DB에 접근하여 입력한 ID가 이미 존재하는지 검사한다.
-	private void checkID() {//true: 사용가능, false: 사용불가
-		duplicateCheck=false;
+	private void checkID() {//true: 중복존재, false: 사용가능
 		String userID = idT.getText().trim();
 		if(userID.equals("")) {
 			JOptionPane.showMessageDialog(this, "아이디(ID)는 필수 입력사항입니다.");
@@ -232,24 +227,33 @@ public class SignUpMember extends JFrame implements ActionListener{
 			JOptionPane.showMessageDialog(this, "아이디(ID)는 3글자 이상 입력하세요.");
 			return;
 		}
-		//DAO 중복체크
+		//DB 중복체크
 		MembershipDAO membershipDAO = MembershipDAO.getInstance();
 		duplicateCheck = membershipDAO.isIDExist(userID);
-		if(duplicateCheck) JOptionPane.showMessageDialog(this, "사용 가능한 아이디 입니다.");
+		if(!duplicateCheck) JOptionPane.showMessageDialog(this, "사용 가능한 아이디 입니다.");
 		else {
 			JOptionPane.showMessageDialog(this, "이미 존재하는 아이디 입니다."
 												+ "\n다른 아이디를 입력해 주세요.");
-			return;
 		}
 	}
 
 	//사용자가 입력한 메일주소로 인증메일을 발송한다.(발신자:songming05)
-	private void mailSend() {
+	private void mailSend() {//true: 중복존재, false: 사용가능
 		String userEmail = emailAddressT.getText().trim();
+		//DB 중복체크
+		boolean emailExist=false;
+		MembershipDAO membershipDAO = MembershipDAO.getInstance();
+		emailExist = membershipDAO.isEmailExist(userEmail);
+		if(emailExist) {
+			JOptionPane.showMessageDialog(this, "이미 존재하는 이메일 입니다."
+									+ "\n다른 이메일 주소를 입력해 주세요.");
+			return;
+		}
+		
 		MailSendManager mailSendManager = new MailSendManager(userEmail);
 		
 		certificationKey = mailSendManager.getCertificationKey();
-		if(certificationKey.length()<4) JOptionPane.showMessageDialog(this, "인증 메일이 발송되었습니다.");
+		if(certificationKey.length()>4) JOptionPane.showMessageDialog(this, "인증 메일이 발송되었습니다.");
 	}
 	
 	/*
@@ -263,7 +267,7 @@ public class SignUpMember extends JFrame implements ActionListener{
 			JOptionPane.showMessageDialog(this, "아이디(ID)는 필수 입력사항입니다.");
 			return;
 		}
-		if(!duplicateCheck) {
+		if(duplicateCheck) {
 			JOptionPane.showMessageDialog(this, "아이디(ID) 중복확인을 해주시기 바랍니다.");
 			return;
 		}
@@ -313,7 +317,7 @@ public class SignUpMember extends JFrame implements ActionListener{
 		}
 		if(!certificateCheck) JOptionPane.showMessageDialog(this, "이메일 인증이 되지 않았습니다.");
 		
-		if(certificateCheck && duplicateCheck) {
+		if(certificateCheck && !duplicateCheck) {
 			//MembershipDTO 에 추가
 			MembershipDTO membershipDTO = new MembershipDTO();
 			MembershipDAO membershipDAO = MembershipDAO.getInstance();
@@ -327,13 +331,15 @@ public class SignUpMember extends JFrame implements ActionListener{
 			membershipDTO.setPhone(userPhone);
 			membershipDTO.setEmail(userEmail);
 			
+			//DB 에 등록
 			membershipDAO.insertArticle(membershipDTO);
 			
-			//DB 에 등록
 			JOptionPane.showMessageDialog(this, "환영합니다!! "+userName+"님"
 											+ "\n회원가입이 완료 되었습니다."
 											+ "\n로그인창으로 이동합니다.");
 			//로그인 창으로
+			setVisible(false);
+			dispose();
 		}
 		
 	}

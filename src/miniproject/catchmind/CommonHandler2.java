@@ -8,21 +8,22 @@ import java.util.ArrayList;
 
 import miniproject.membership.dao.MembershipDAO;
 
-public class CommonHandler extends Thread {
+public class CommonHandler2 extends Thread {
 	
 	private Socket socket;
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
-	private ArrayList<CommonHandler>arCHandler;
+	private ArrayList<CommonHandler2>arCHandler;
 	private ArrayList<waitingRoomUserDTO> arUserList;
 	private ArrayList<waitingRoomRCreateDTO> arRoomList;
 	private ArrayList<catchmind_ShapDTO> shapeDTOList;
 	private ArrayList<GameUserDTO> arGameUserList;
+	private String roomName;
 	
-	public CommonHandler(Socket socket,
-			ArrayList<CommonHandler> arCHandler,
+	public CommonHandler2(Socket socket,
+			ArrayList<CommonHandler2> arCHandler,
 			ArrayList<waitingRoomUserDTO>  arUserList, 
-			ArrayList<waitingRoomRCreateDTO> arRoomList,
+			ArrayList<waitingRoomRCreateDTO> arRoomList, 
 			ArrayList<GameUserDTO> arGameUserList) {
 		
 		this.socket = socket;
@@ -56,9 +57,11 @@ public class CommonHandler extends Thread {
 		int indexNumber = 0;
 		
 		waitingRoomRCreateDTO waitingroomrcreateDTO = null;
-		String roomName = null;
+		roomName = null;
 		String roomPass = null;
-		int roomPerson = 0;
+		String owner = null;
+		int person = 0;
+		int roomNumber = 0;
 		
 		//게임 2개
 		ChatDTO chatHandlerDTO = null;
@@ -95,12 +98,14 @@ public class CommonHandler extends Thread {
 									waitingroomuserDTO_send.setCommand(Info.JOIN);
 									waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
 									ChatDTO chatDTO_send = new ChatDTO();
+									GameUserDTO gameuser_send = new GameUserDTO();
+									gameuser_send.setCommand(Info.WAIT);
 									oos.writeObject(waitingroomchattingDTO_send);
 									oos.writeObject(waitingroomuserDTO_send);
 									oos.writeObject(waitingroomrcreateDTO_send);
 									oos.writeObject(chatDTO_send);
 									oos.writeObject(shapeDTOList);
-									oos.writeObject(gameuserDTO);
+									oos.writeObject(gameuser_send);
 									
 								}
 								oos.flush();
@@ -115,22 +120,23 @@ public class CommonHandler extends Thread {
 							for(int i =0; i<arRoomList.size();i++) {
 								roomName = arRoomList.get(i).getRoomName();
 								roomPass = arRoomList.get(i).getRoomPass();
-								roomPerson = arRoomList.get(i).getPerson();
+								person = arRoomList.get(i).getPerson();
 								WaitingRoomChattingDTO waitingroomchattingDTO_send = new WaitingRoomChattingDTO();
 								waitingRoomUserDTO waitingroomuserDTO_send = new waitingRoomUserDTO();
 								waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
 								waitingroomrcreateDTO_send.setRoomName(roomName);
 								waitingroomrcreateDTO_send.setRoomPass(roomPass);
-								waitingroomrcreateDTO_send.setPerson(roomPerson);
+								waitingroomrcreateDTO_send.setPerson(person);
 								waitingroomrcreateDTO_send.setCommand(Info.CREATE);
-								waitingroomrcreateDTO_send.setRoomNumber(arRoomList.get(i).getRoomNumber());
 								ChatDTO chatDTO_send = new ChatDTO();
+								GameUserDTO gameuser_send = new GameUserDTO();
+								gameuser_send.setCommand(Info.WAIT);
 								oos.writeObject(waitingroomchattingDTO_send);
 								oos.writeObject(waitingroomuserDTO_send);
 								oos.writeObject(waitingroomrcreateDTO_send);
 								oos.writeObject(chatDTO_send);
 								oos.writeObject(shapeDTOList);
-								oos.writeObject(gameuserDTO);
+								oos.writeObject(gameuser_send);
 							
 								//broadcast(waitingroomchattingDTO_send,waitingroomuserDTO_send);
 							}
@@ -141,25 +147,22 @@ public class CommonHandler extends Thread {
 						//arGameUserList.add(chatHandlerDTO);	//게임유저 리스트 추가
 				//게임방에서 유저 추가-----------------------------------------------------------------------
 						//System.out.println(arGameUserList.size());
-						/*
+						
 						if(gameuserDTO.getCommand()==Info.JOIN && arGameUserList != null) {
-							System.out.println(" 들어온수치 : "+arGameUserList.size());
-							for(int i =0; i<arGameUserList.size();i++) {
-								gameUserName = arGameUserList.get(i).getName();
-								point = arGameUserList.get(i).getPoint();
-								arGameUserList.get(i).getOwner();
-								
+							//System.out.println(" 들어온수치 : "+arGameUserList.size());
+							for(int i =0; i<arGameUserList.size();i++) {							
 								WaitingRoomChattingDTO waitingroomchattingDTO_send = new WaitingRoomChattingDTO();
 								waitingRoomUserDTO waitingroomuserDTO_send = new waitingRoomUserDTO();
 								waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
+								waitingroomrcreateDTO_send.setRoomName(waitingroomrcreateDTO.getRoomName());
 								ChatDTO chatDTO_send = new ChatDTO();
+								
 								GameUserDTO gameuserDTO_send = new GameUserDTO();
-								gameuserDTO_send.setName(gameUserName);
-								gameuserDTO_send.setPoint(point);
+								gameuserDTO_send.setName(arGameUserList.get(i).getName());
+								gameuserDTO_send.setPoint(arGameUserList.get(i).getPoint());
 								gameuserDTO_send.setOwner(arGameUserList.get(i).getOwner());
 								gameuserDTO_send.setCommand(Info.JOIN);
-								
-								
+									
 								oos.writeObject(waitingroomchattingDTO_send);
 								oos.writeObject(waitingroomuserDTO_send);
 								oos.writeObject(waitingroomrcreateDTO_send);
@@ -170,7 +173,6 @@ public class CommonHandler extends Thread {
 							}
 							oos.flush();
 						}
-						*/
 						
 						
 				//------------------------------------------------------------------------------------------
@@ -269,26 +271,27 @@ public class CommonHandler extends Thread {
 						
 						//--------------------------------------------------------------
 						
-						if(waitingroomrcreateDTO.getCommand() == Info.JOIN) {
-							waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
-							waitingroomrcreateDTO_send.setCommand(Info.WAIT);
-							broadcast(waitingroomrcreateDTO_send);
+						
 							
-							
-						}else if(waitingroomrcreateDTO.getCommand() == Info.CREATE) {		
+				
+						if(waitingroomrcreateDTO.getCommand() == Info.CREATE) {		
 							arRoomList.add(waitingroomrcreateDTO);				//arrayList 추가  방 만들기 카운트 
-			
+
 							roomName = waitingroomrcreateDTO.getRoomName();
 							roomPass = waitingroomrcreateDTO.getRoomPass();
-							roomPerson = waitingroomrcreateDTO.getPerson();
-
+							person = waitingroomrcreateDTO.getPerson();
+							
+							//UserArrayList 에서 삭제
+							//arUserList.remove(indexNumber);
+							
+							
 							waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
 							waitingroomrcreateDTO_send.setCommand(Info.CREATE);
 							waitingroomrcreateDTO_send.setRoomName(roomName);
 							waitingroomrcreateDTO_send.setRoomPass(roomPass);
-							waitingroomrcreateDTO_send.setPerson(roomPerson);
-							waitingroomrcreateDTO_send.setOwner(waitingroomrcreateDTO.getOwner());
+							waitingroomrcreateDTO_send.setPerson(person);
 							waitingroomrcreateDTO_send.setRoomNumber(arRoomList.size());
+							System.out.println("arRoomList  "+arRoomList.size());
 							
 							broadcast(waitingroomrcreateDTO_send);
 							
@@ -296,8 +299,35 @@ public class CommonHandler extends Thread {
 						}else if(waitingroomrcreateDTO.getCommand() == Info.WAIT) {
 							waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
 							waitingroomrcreateDTO_send.setCommand(Info.WAIT);
+							waitingroomrcreateDTO_send.setRoomName(waitingroomrcreateDTO.getRoomName());
 							broadcast(waitingroomrcreateDTO_send);
+							
+						}else if(waitingroomrcreateDTO.getCommand() == Info.JOIN) {
+							arRoomList.add(waitingroomrcreateDTO);
+							waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
+							for(int i = 0; i<arRoomList.size();i++) {
+								System.out.println("핸들러에 저장된 방이름"+arRoomList.get(i).getRoomName());
+								waitingroomrcreateDTO_send.setRoomName(arRoomList.get(i).getRoomName());
+							}
+							
+							roomName = waitingroomrcreateDTO.getRoomName();	// ChatFrame 생성후 핸들러2에  방정보 저장
+							roomPass = waitingroomrcreateDTO.getRoomPass();
+							owner = waitingroomrcreateDTO.getOwner();
+							person = waitingroomrcreateDTO.getPerson();
+							roomNumber = waitingroomrcreateDTO.getRoomNumber();
+							System.out.println(roomName);
+	
+
+							waitingroomrcreateDTO_send.setRoomPass(waitingroomrcreateDTO.getRoomPass());
+							waitingroomrcreateDTO_send.setOwner(waitingroomrcreateDTO.getOwner());
+							waitingroomrcreateDTO_send.setPerson(waitingroomrcreateDTO.getPerson());
+							waitingroomrcreateDTO_send.setRoomNumber(waitingroomrcreateDTO.getRoomNumber());
+							waitingroomrcreateDTO_send.setCommand(Info.WAIT);
+							
+							broadcast(waitingroomrcreateDTO_send);
+							
 						}
+
 						
 						//-------------------------------------------------------------------
 						
@@ -321,6 +351,8 @@ public class CommonHandler extends Thread {
 							MembershipDAO membershipDAO = MembershipDAO.getInstance();
 							//int newScore = membershipDAO.getScore(user);
 							
+							waitingRoomRCreateDTO waitingroomrcreateDTO_send = new waitingRoomRCreateDTO();
+							waitingroomrcreateDTO_send.setRoomName(waitingroomrcreateDTO.getRoomName());
 							ChatDTO chatSendDTO= new ChatDTO();
 							chatSendDTO.setCommand(Info.EXIT);
 							GameUserDTO gameuserDTO_send = new GameUserDTO();
@@ -330,7 +362,7 @@ public class CommonHandler extends Thread {
 							
 							oos.writeObject(waitingroomchattingDTO);
 							oos.writeObject(waitingroomuserDTO);
-							oos.writeObject(waitingroomrcreateDTO);
+							oos.writeObject(waitingroomrcreateDTO_send);
 							oos.writeObject(chatSendDTO);
 							oos.writeObject(shapeDTOList);
 							oos.writeObject(gameuserDTO_send);
@@ -348,13 +380,13 @@ public class CommonHandler extends Thread {
 							
 							
 						}else if(chatHandlerDTO.getCommand()==Info.SEND) {
+							
 							ChatDTO chatSendDTO= new ChatDTO();
+							System.out.println("arRoomList의 값"+arRoomList.size());
+							
 							chatSendDTO.setCommand(Info.SEND);
 							chatSendDTO.setMessage("["+chatNickName+"] "+chatHandlerDTO.getMessage());
 							
-							broadcast(waitingroomchattingDTO);
-							broadcast(waitingroomuserDTO);
-							broadcast(waitingroomrcreateDTO);
 							broadcast(chatSendDTO);
 							broadcast(shapeDTOList);
 
@@ -406,6 +438,7 @@ public class CommonHandler extends Thread {
 							GameUserDTO gameuserDTO_send = new GameUserDTO();
 							gameuserDTO_send.setName(gameUserName);
 							gameuserDTO_send.setPoint(point);
+							gameuserDTO_send.setOwner(waitingroomrcreateDTO.getOwner());
 							
 							
 							arGameUserList.add(gameuserDTO_send);
@@ -437,7 +470,7 @@ public class CommonHandler extends Thread {
 
 	public void broadcast (WaitingRoomChattingDTO waitingroomchattingDTO_send){
 		
-		for(CommonHandler commonhandler : arCHandler){
+		for(CommonHandler2 commonhandler : arCHandler){
 			try{
 				commonhandler.oos.writeObject(waitingroomchattingDTO_send);
 				commonhandler.oos.flush();
@@ -450,7 +483,7 @@ public class CommonHandler extends Thread {
 	}
 	
 	public void broadcast (waitingRoomUserDTO waitingroomuserDTO_send) {
-		for(CommonHandler commonhandler : arCHandler){
+		for(CommonHandler2 commonhandler : arCHandler){
 			try{
 				commonhandler.oos.writeObject(waitingroomuserDTO_send);
 				commonhandler.oos.flush();
@@ -461,7 +494,7 @@ public class CommonHandler extends Thread {
 	}
 	public void broadcast (WaitingRoomChattingDTO waitingroomchattingDTO,
 							waitingRoomUserDTO waitingroomuserDTO_send){
-		for(CommonHandler commonhandler : arCHandler){
+		for(CommonHandler2 commonhandler : arCHandler){
 			try{
 				commonhandler.oos.writeObject(waitingroomchattingDTO);
 				commonhandler.oos.writeObject(waitingroomuserDTO_send);
@@ -475,7 +508,7 @@ public class CommonHandler extends Thread {
 	}
 	public void broadcast (waitingRoomRCreateDTO waitingroomrcreateDTO_send) {
 		
-		for(CommonHandler commonhandler : arCHandler) {
+		for(CommonHandler2 commonhandler : arCHandler) {
 			try {
 				commonhandler.oos.writeObject(waitingroomrcreateDTO_send);
 				commonhandler.oos.flush();
@@ -486,7 +519,7 @@ public class CommonHandler extends Thread {
 		}
 	}
 	public void broadcast(ArrayList<catchmind_ShapDTO> shapeDTOList) {
-		for(CommonHandler commonhandler:arCHandler) {
+		for(CommonHandler2 commonhandler:arCHandler) {
 			try {
 				commonhandler.oos.writeObject(shapeDTOList);
 				commonhandler.oos.flush();
@@ -499,18 +532,19 @@ public class CommonHandler extends Thread {
 	}
 
 	public void broadcast(ChatDTO chatsendDTO) {
-		for(CommonHandler commonhandler:arCHandler) {
-			try {
-				commonhandler.oos.writeObject(chatsendDTO);
-				commonhandler.oos.flush();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}			
+		for(CommonHandler2 commonhandler:arCHandler) {
+				try {
+					commonhandler.oos.writeObject(chatsendDTO);
+					commonhandler.oos.flush();
+						
+				} catch (IOException e) {
+						e.printStackTrace();
+				}
 		}
 	}
 	
 	public void broadcast(GameUserDTO gameuserDTO_send) {
-		for(CommonHandler commonhandler:arCHandler) {
+		for(CommonHandler2 commonhandler:arCHandler) {
 			try {
 				commonhandler.oos.writeObject(gameuserDTO_send);
 				commonhandler.oos.flush();
